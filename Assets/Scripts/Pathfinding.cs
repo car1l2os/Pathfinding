@@ -73,7 +73,7 @@ public class Pathfinding : MonoBehaviour {
                 {
                     if (!pairs_to_check[l].Except(otherTriangle).Any())
                     {
-                        Debug.Log("Pareja");
+                        //Debug.Log("Pareja");
                         int[] triangle = { triangles[i], triangles[i + 1], triangles[i + 2] };
                         DrawLine(triangle, otherTriangle);
                         graph[i/3].Add(j / 3);
@@ -175,6 +175,7 @@ public class Pathfinding : MonoBehaviour {
                 Debug.Log("Camino encontrado");
                 ConsigueCamino(start, end);
                 PaintHashOfNodes(visitados);
+                break;
             }
 
 
@@ -204,6 +205,106 @@ public class Pathfinding : MonoBehaviour {
         }
 
     }
+    private void Dijkstra()
+    {
+        int numberNodes = graph.Count;
+        //int count = 0;
+        List<Node> nodes = new List<Node>();
+        HashSet<Node> visitados = new HashSet<Node>();
+        for (int i = 0; i < posiciones_marcadores.Count; i++)
+        {
+            nodes.Add(new Node(i, posiciones_marcadores[i], float.PositiveInfinity));
+        }
+
+        Node start = nodes[startNode];
+        start.value = 0;
+
+        while (visitados.Count < numberNodes)
+        {
+            /*count++;
+            if(count >= 10000000)
+            {
+                Debug.Log("Pasos maximos");
+                break;
+            }*/
+
+            Node actual = start;
+            foreach (Node node in nodes)
+            {
+                if (!visitados.Contains(node))
+                {
+                    actual = node;
+                    break;
+                }      
+            }
+
+            for (int i = 1; i < nodes.Count; i++) //Cola prioridad 
+            {
+                if (nodes[i].value < actual.value && !visitados.Contains(nodes[i]))
+                {
+                    actual = nodes[i];
+                }
+            }
+
+            visitados.Add(actual);
+
+            if (actual == nodes[endNode])
+            {
+                ConsigueCamino(start, nodes[endNode]);
+                PaintHashOfNodes(visitados);
+                break;
+            }
+
+            for (int i = 0; i < graph[actual.indexInGraph].Count; i++)
+            {
+                float n_value = actual.value + Vector3.Distance(actual.worldPos, posiciones_marcadores[graph[actual.indexInGraph][i]]);
+                if (n_value < nodes[graph[actual.indexInGraph][i]].value)                               
+                {
+                    nodes[graph[actual.indexInGraph][i]].value = n_value;
+                    nodes[graph[actual.indexInGraph][i]].comesFrom = actual;
+                }
+
+            }
+        }
+    }
+    private void DFS()
+    {
+        List<Node> nodes = new List<Node>();
+        HashSet<Node> visitados = new HashSet<Node>();
+        for (int i = 0; i < posiciones_marcadores.Count; i++)
+        {
+            nodes.Add(new Node(i, posiciones_marcadores[i], float.PositiveInfinity));
+        }
+        Node start = nodes[startNode];
+        Node end = nodes[endNode];
+
+        DFS_recursive(start, nodes, visitados,end,start);
+    }
+
+    void DFS_recursive(Node actual, List<Node> nodes, HashSet<Node> visitados, Node end,Node start)
+    {
+
+        if(actual == end)
+        {
+            ConsigueCamino(start, nodes[endNode]);
+            PaintHashOfNodes(visitados);
+        }
+
+        visitados.Add(actual);
+
+        for (int i = 0; i < graph[actual.indexInGraph].Count; i++)
+        {
+            if (!visitados.Contains(nodes[graph[actual.indexInGraph][i]]))
+            {
+                nodes[graph[actual.indexInGraph][i]].comesFrom = actual;
+                DFS_recursive(nodes[graph[actual.indexInGraph][i]], nodes, visitados,end,start);
+            }
+
+        }
+
+
+    }
+    
 
     void ConsigueCamino(Node start, Node end)
     {
@@ -243,6 +344,11 @@ public class Pathfinding : MonoBehaviour {
     }
     private void PaintHashOfNodes(HashSet<Node> list)
     {
+        foreach(GameObject marcador in marcadores)
+        {
+            marcador.GetComponent<Renderer>().material =neutralMaterial;
+        }
+
         foreach(Node node in list)
         {
             marcadores[node.indexInGraph].GetComponent<Renderer>().material = visitedMaterial;
