@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Pathfinding : MonoBehaviour {
 
@@ -28,6 +29,10 @@ public class Pathfinding : MonoBehaviour {
     private int startNode;
     private int endNode;
 
+    private Text text;
+    private int actual_simulation = 0;
+
+
 
 	// Use this for initialization
 	void Start () {
@@ -37,6 +42,7 @@ public class Pathfinding : MonoBehaviour {
         posiciones_marcadores = new List<Vector3>();
         marcadores = new List<GameObject>();
         graph = new List<List<int>>();
+        text = GameObject.Find("AlgName").GetComponent<Text>(); 
 
         startNode = -1;
         endNode = -1;
@@ -107,7 +113,25 @@ public class Pathfinding : MonoBehaviour {
             CheckForClick(1);
 
         if (Input.GetKeyDown(KeyCode.Space))
-            StarA();
+            if (actual_simulation == 0)
+                StarA();
+            else if (actual_simulation == 1)
+                Dijkstra();
+            else if (actual_simulation == 2)
+                DFS();
+
+        if(Input.GetKeyDown(KeyCode.C))
+        {
+            actual_simulation++;
+            if (actual_simulation == 3) actual_simulation = 0;
+
+            if (actual_simulation == 0)
+                text.text = "A*";
+            else if (actual_simulation == 1)
+                text.text = "Dijkstra";
+            else if(actual_simulation == 2)
+                text.text = "DFS";
+        }
     }
 
     private void CheckForClick(int button)
